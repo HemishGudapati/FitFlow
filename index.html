@@ -1,0 +1,2131 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>FitFlow V2</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            /* Palette */
+            --bg-color: #F4F6F8;
+            --card-bg: #FFFFFF;
+            --primary: #111827;
+            --text-main: #111827;
+            --text-muted: #9CA3AF;
+            --accent: #111827;
+            --success: #D1FAE5;
+            --success-text: #065F46;
+            --warmup: #FFEDD5;
+            --warmup-text: #9A3412;
+
+            /* UI */
+            --radius: 24px;
+            --shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.08);
+            --shadow-active: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            --font-family: 'Outfit', sans-serif;
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: var(--font-family);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            font-smooth: always;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Typography */
+        h1,
+        h2,
+        h3,
+        h4 {
+            margin: 0;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        p {
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        /* Utilities */
+        .container {
+            width: 100%;
+            max-width: 600px;
+            /* Mobile focused but clean on desktop */
+            margin: 0 auto;
+            padding: 20px 20px 100px 20px;
+            /* Bottom padding for floating nav */
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Components */
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 24px;
+            margin-bottom: 20px;
+            border: none;
+            transition: var(--transition);
+        }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            padding: 16px 24px;
+            font-family: var(--font-family);
+            font-weight: 600;
+            font-size: 1rem;
+            width: 100%;
+            cursor: pointer;
+            transition: transform 0.1s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-outline {
+            background: white;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+            border-radius: 12px;
+            padding: 8px 16px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 14px;
+            border-radius: 16px;
+            border: 1px solid transparent;
+            background: #F9FAFB;
+            font-family: var(--font-family);
+            font-size: 1rem;
+            color: var(--text-main);
+            transition: var(--transition);
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            background: white;
+            box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Selection Pills */
+        .pill-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .pill-radio {
+            display: none;
+        }
+
+        .pill-label {
+            padding: 10px 20px;
+            background: #F9FAFB;
+            border-radius: 100px;
+            color: var(--text-muted);
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            border: 1px solid transparent;
+        }
+
+        .pill-radio:checked+.pill-label {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Nav */
+        .nav-dock {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 10px 30px;
+            border-radius: 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 40px;
+            box-shadow: var(--shadow);
+            z-index: 100;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+            transform: translateY(-5px);
+        }
+
+        .nav-item svg {
+            width: 24px;
+            height: 24px;
+            stroke-width: 2;
+        }
+
+        /* Toast */
+        .toast-container {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 200;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+            /* Children will enable pointer-events */
+        }
+
+        .toast {
+            background: var(--primary);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 50px;
+            box-shadow: var(--shadow);
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            opacity: 0;
+            transform: translateY(20px) scale(0.9);
+            animation: toastPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            pointer-events: auto;
+        }
+
+        .toast.success {
+            background: var(--success);
+            color: var(--success-text);
+        }
+
+        @keyframes toastPop {
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* Calendar Streak */
+        .cal-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 6px;
+            margin-top: 15px;
+        }
+
+        .cal-day {
+            aspect-ratio: 1;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            background: #F3F4F6;
+            color: var(--text-muted);
+            position: relative;
+        }
+
+        .cal-day.active {
+            background: var(--success);
+            color: var(--success-text);
+            font-weight: 700;
+        }
+
+        .cal-day.today {
+            border: 2px solid var(--primary);
+        }
+
+        .streak-counter {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .streak-val {
+            font-size: 3rem;
+            font-weight: 800;
+            line-height: 1;
+            color: var(--primary);
+        }
+
+        /* Workout Row Completion */
+        .set-row {
+            transition: all 0.3s ease;
+            padding: 10px 0;
+            border-bottom: 1px solid #f3f4f6;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .set-row.completed {
+            opacity: 0.5;
+            background-color: #f9fafb;
+        }
+
+        .set-row.completed .ex-input {
+            color: var(--text-muted);
+            background: rgba(0, 0, 0, 0.02);
+            pointer-events: none;
+        }
+
+        .streak-label {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 300;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal {
+            background: white;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            border-radius: 24px;
+            padding: 30px;
+            overflow-y: auto;
+            transform: translateY(20px);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+
+        .modal-overlay.active .modal {
+            transform: translateY(0);
+        }
+
+        .step-item {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .step-number {
+            width: 24px;
+            height: 24px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 700;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        /* Slider Polish */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 24px;
+            width: 24px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            margin-top: -10px;
+            /* You need to specify a margin in Chrome, but in Firefox and IE it is automatic */
+            box-shadow: var(--shadow-active);
+        }
+
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #e5e7eb;
+            border-radius: 2px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="app" class="container">
+        <!-- Views will be injected here -->
+    </div>
+
+    <div id="toast-area" class="toast-container"></div>
+    <div id="modal-area" class="modal-overlay" onclick="Handlers.closeModal(event)"></div>
+
+    <div id="nav" class="nav-dock hidden">
+        <div class="nav-item" onclick="app.router.navigate('dashboard', this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+            </svg>
+        </div>
+        <div class="nav-item" onclick="app.router.navigate('plan', this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+        </div>
+        <div class="nav-item" onclick="app.router.navigate('leaderboard', this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M6 9H2v13h4V9zm6-5H8v18h4V4zm6 9h-4v9h4v-9z" />
+            </svg>
+        </div>
+        <div class="nav-item" onclick="app.router.navigate('profile', this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+        </div>
+    </div>
+
+    <script>
+        // --- SUPABASE CONFIG ---
+        const SUPABASE_URL = 'https://jvplattkpkyceuazllut.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2cGxhdHRrcGt5Y2V1YXpsbHV0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkzNjM4OTUsImV4cCI6MjA4NDkzOTg5NX0.QfXpvl4Gbz_uHyNsXWgZnsu-DkTqV1wwKm7Jd2N8quo';
+
+        let supabaseClient = null;
+        if (SUPABASE_KEY) {
+            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        } else {
+            console.warn("Supabase Key missing. Offline mode only.");
+        }
+        // --- DATA LAYER ---
+        const DefaultState = {
+            user: {
+                name: "",
+                goal: null, // "Hypertrophy", "Strength", "Endurance"
+                equipment: null, // "Full Gym", "Dumbbells", "Bodyweight"
+                frequency: 4,
+                experience: "Intermediate", // "Beginner", "Intermediate", "Advanced"
+                onboarded: false
+            },
+            plan: [], // 7 items for the week
+            history: {}, // Map<DateString, {completed: bool, rpe: number, ...}>
+            exerciseHistory: {}, // Map<ExerciseName, {weight: number, reps: number, date: string}>
+            currentWorkout: null // Transient state for active workout
+        };
+
+        const AppState = {
+            data: { ...DefaultState },
+            meta: { dirty: false, lastSync: null },
+            ui: { streakMode: 'workout' }, // 'workout' or 'water'
+            session: null,
+
+            async init() {
+                this.load();
+
+                if (supabaseClient) {
+                    const { data: { session } } = await supabaseClient.auth.getSession();
+                    this.session = session;
+
+                    supabaseClient.auth.onAuthStateChange((_event, session) => {
+                        this.session = session;
+                        if (session) {
+                            this.sync('pull'); // Initial pull on login
+                        }
+                    });
+
+                    // Offline/Online Listeners
+                    window.addEventListener('online', () => this.sync('push'));
+                }
+            },
+
+            load() {
+                const stored = localStorage.getItem('fitflow_v2');
+                if (stored) {
+                    const parsed = JSON.parse(stored);
+                    this.data = parsed.data || parsed; // Handle legacy structure
+                    this.meta = parsed.meta || { dirty: false, lastSync: null };
+                } else {
+                    this.save();
+                }
+            },
+
+            save() {
+                this.meta.dirty = true;
+                this.meta.updated_at = new Date().toISOString();
+                localStorage.setItem('fitflow_v2', JSON.stringify({
+                    data: this.data,
+                    meta: this.meta
+                }));
+
+                // Debounce sync
+                if (this.syncTimer) clearTimeout(this.syncTimer);
+                this.syncTimer = setTimeout(() => this.sync('push'), 2000);
+            },
+
+            async sync(mode = 'push') {
+                if (!supabaseClient || !this.session || !navigator.onLine) return;
+
+                const userId = this.session.user.id;
+
+                if (mode === 'push' && this.meta.dirty) {
+                    // Upload
+                    const { error } = await supabaseClient
+                        .from('user_data')
+                        .upsert({
+                            id: userId,
+                            content: this.data,
+                            updated_at: new Date().toISOString()
+                        });
+
+                    if (!error) {
+                        this.meta.dirty = false;
+                        this.meta.lastSync = new Date().toISOString();
+                        localStorage.setItem('fitflow_v2', JSON.stringify({ data: this.data, meta: this.meta }));
+                        console.log("Synced to Cloud");
+
+                        // Sync Public Profile (Fire and Forget)
+                        const workoutStreak = this.getStreak();
+                        const waterStreak = this.getWaterStreak();
+                        supabaseClient.from('profiles').upsert({
+                            id: userId,
+                            display_name: this.data.user.name,
+                            workout_streak: workoutStreak,
+                            water_streak: waterStreak,
+                            last_active: new Date().toISOString()
+                        }).then(({ error }) => {
+                            if (error) console.error("Profile Sync Error", error);
+                        });
+
+                    } else {
+                        console.error("Sync Push Error", error);
+                    }
+                }
+                else if (mode === 'pull') {
+                    // Download
+                    const { data, error } = await supabaseClient
+                        .from('user_data')
+                        .select('*')
+                        .eq('id', userId)
+                        .single();
+
+                    if (data && data.content) {
+                        // Conflict Resolution: Last Write Wins (Simple)
+                        // Or if local is cleaner/newer?
+                        // For now, if pulling (usually on login), we trust cloud unless local is very fresh?
+                        // Let's trust cloud on login.
+                        this.data = data.content;
+                        this.meta.dirty = false;
+                        this.meta.lastSync = new Date().toISOString();
+                        this.save(); // Just to persist to local storage, careful not to loop
+                        localStorage.setItem('fitflow_v2', JSON.stringify({ data: this.data, meta: this.meta }));
+                        console.log("Synced from Cloud");
+                        // Refresh View
+                        const currentRoute = App.router.current || 'dashboard';
+                        if (currentRoute !== 'login' && currentRoute !== 'signup') {
+                            App.router.navigate(currentRoute);
+                        }
+                    }
+                }
+            },
+
+            updateUser(updates) {
+                this.data.user = { ...this.data.user, ...updates };
+                this.save();
+            },
+
+            recordHistory(dateKey, payload) {
+                this.data.history[dateKey] = payload;
+                this.save();
+            },
+
+            getStreak() {
+                let streak = 0;
+                const today = new Date();
+                // Check up to 365 days back
+                for (let i = 0; i < 365; i++) {
+                    const d = new Date();
+                    d.setDate(today.getDate() - i);
+                    const key = d.toISOString().split('T')[0];
+                    if (this.data.history[key] && this.data.history[key].completed) {
+                        streak++;
+                    } else if (i === 0 && (!this.data.history[key] || !this.data.history[key].completed)) {
+                        // If today is not done yet, don't break streak, just ignore
+                        continue;
+                    } else {
+                        break;
+                    }
+                }
+                return streak;
+            },
+
+            getWaterStreak() {
+                let streak = 0;
+                const today = new Date();
+                const dailyGoal = Generators.getWaterGoal(this.data.user.weight);
+                for (let i = 0; i < 365; i++) {
+                    const d = new Date();
+                    d.setDate(today.getDate() - i);
+                    const key = d.toISOString().split('T')[0];
+                    const entry = this.data.history[key];
+
+                    if (entry && entry.water >= dailyGoal) {
+                        streak++;
+                    } else if (i === 0) {
+                        continue;
+                    } else {
+                        break;
+                    }
+                }
+                return streak;
+            },
+
+            getCalendarData() {
+                const days = [];
+                const today = new Date();
+                // Get last 28 days (4 weeks) for cleaner grid
+                for (let i = 27; i >= 0; i--) {
+                    const d = new Date();
+                    d.setDate(today.getDate() - i);
+                    const key = d.toISOString().split('T')[0];
+                    days.push({
+                        date: d.getDate(),
+                        fullDate: key,
+                        isToday: i === 0,
+                        completed: !!(this.data.history[key] && this.data.history[key].completed)
+                    });
+                }
+                return days;
+            }
+        };
+
+        // --- UTILS ---
+        const Utils = {
+            select: (s) => document.querySelector(s),
+            html: (str) => str, // No-op tag for syntax highlighting potentially
+            generateId: () => Math.random().toString(36).substr(2, 9),
+            toast: (msg, type = 'default', duration = 3000) => {
+                const el = document.createElement('div');
+                el.className = `toast ${type}`;
+                el.innerHTML = msg;
+                const container = document.getElementById('toast-area');
+                container.appendChild(el);
+                setTimeout(() => {
+                    el.style.opacity = '0';
+                    el.style.transform = 'translateY(10px) scale(0.9)';
+                    setTimeout(() => el.remove(), 300);
+                }, duration);
+            }
+        };
+
+        // --- EXERCISE ENGINE ---
+        const ExerciseDB = [
+            // Chest
+            {
+                name: "Barbell Bench Press",
+                muscle: "Chest",
+                type: "compound",
+                equipment: ["Full Gym"],
+                description: "The king of upper body exercises. Targets the entire pectoral muscle, anterior deltoids, and triceps for maximum mass building.",
+                steps: ["Lie on the bench with eyes under the bar.", "Grip bar slightly wider than shoulder width.", "Lower bar to mid-chest with control.", "Press back up explosively."]
+            },
+            {
+                name: "Dumbbell Bench Press",
+                muscle: "Chest",
+                type: "compound",
+                equipment: ["Full Gym", "Dumbbells Only"],
+                description: "Allows for a greater range of motion than the barbell press and corrects strength imbalances between sides.",
+                steps: ["Lie back with dumbbells at shoulder width.", "Press weights up until arms are extended.", "Lower slowly until elbows are at 90 degrees.", "Press back up to starting position."]
+            },
+            {
+                name: "Push Ups",
+                muscle: "Chest",
+                type: "compound",
+                equipment: ["Full Gym", "Dumbbells Only", "Bodyweight Only"],
+                description: "A fundamental bodyweight movement that builds a strong chest, shoulders, and core stability.",
+                steps: ["Start in a high plank position.", "Lower your body until your chest nearly touches the floor.", "Keep elbows at a 45-degree angle.", "Push back up to the start."]
+            },
+            {
+                name: "Dumbbell Flys",
+                muscle: "Chest",
+                type: "isolation",
+                equipment: ["Full Gym", "Dumbbells Only"],
+                description: "Isolates the chest muscles by removing tricep involvement. Great for getting a deep stretch and pump.",
+                steps: ["Lie on bench, holding dumbbells above chest.", "Slight bend in elbows, lower weights out to sides.", "Feel the stretch in your chest.", "Bring weights back together at the top."]
+            },
+            {
+                name: "Cable Crossovers",
+                muscle: "Chest",
+                type: "isolation",
+                equipment: ["Full Gym"],
+                description: "Provides constant tension on the chest muscles throughout the entire range of motion.",
+                steps: ["Set pulleys to high position.", "Step forward with one foot, pull handles down and across.", "Squeeze chest hard at the bottom.", "Return to start with control."]
+            },
+            // Back
+            {
+                name: "Pull Ups",
+                muscle: "Back",
+                type: "compound",
+                equipment: ["Full Gym", "Bodyweight Only"],
+                description: "The ultimate back builder. Targets the lats for width and the biceps/forearms.",
+                steps: ["Grip bar wider than shoulder width.", "Pull yourself up until chin is over bar.", "Focus on driving elbows down.", "Lower all the way down to a dead hang."]
+            },
+            {
+                name: "Barbell Rows",
+                muscle: "Back",
+                type: "compound",
+                equipment: ["Full Gym"],
+                description: "Builds thickness and density in the back. Targets lats, rhomboids, and lower back.",
+                steps: ["Bend at hips, keeping back flat.", "Grip bar and pull towards your lower chest.", "Squeeze shoulder blades together.", "Lower bar with control."]
+            },
+            {
+                name: "Dumbbell Rows",
+                muscle: "Back",
+                type: "compound",
+                equipment: ["Full Gym", "Dumbbells Only"],
+                description: "Unilateral exercise that builds lat thickness and core stability while allowing for a full stretch.",
+                steps: ["Place one knee and hand on bench.", "Hold dumbbell in free hand.", "Pull weight to hip, keeping elbow tucked.", "Lower fully to feel a stretch."]
+            },
+            {
+                name: "Lat Pulldowns",
+                muscle: "Back",
+                type: "isolation",
+                equipment: ["Full Gym"],
+                description: "Targets the latissimus dorsi to build back width. A great alternative to pull-ups.",
+                steps: ["Sit with knees secured under pads.", "Grip bar wide.", "Pull bar down to upper chest.", "Control the weight back up."]
+            },
+            // Legs
+            {
+                name: "Barbell Squat",
+                muscle: "Legs",
+                type: "compound",
+                equipment: ["Full Gym"],
+                description: "The king of leg exercises. immense overall mass builder for quads, glutes, and hamstrings.",
+                steps: ["Rest bar on upper back (traps).", "Stand with feet shoulder-width apart.", "Squat down by sitting hips back.", "Drive back up through your heels."]
+            },
+            {
+                name: "Goblet Squat",
+                muscle: "Legs",
+                type: "compound",
+                equipment: ["Full Gym", "Dumbbells Only"],
+                description: "Excellent for learning squat mechanics and targeting quads/glutes with minimal back stress.",
+                steps: ["Hold dumbbell vertically against chest.", "Squat down, keeping chest up.", "Get elbows inside knees if possible.", "Stand back up."]
+            },
+            {
+                name: "Bodyweight Squats",
+                muscle: "Legs",
+                type: "compound",
+                equipment: ["Bodyweight Only"],
+                description: "Fundamental lower body movement for endurance and mobility.",
+                steps: ["Feet shoulder-width apart.", "Squat down until thighs are parallel to floor.", "Keep chest proud.", "Stand back up."]
+            },
+            {
+                name: "Romanian Deadlift",
+                muscle: "Legs",
+                type: "compound",
+                equipment: ["Full Gym", "Dumbbells Only"],
+                description: "Targets the posterior chain: hamstrings, glutes, and lower back.",
+                steps: ["Hold weight at hips.", "Hinge at hips, pushing butt back.", "Lower weight while keeping legs mostly straight.", "Squeeze glutes to return to standing."]
+            },
+            {
+                name: "Lunges",
+                muscle: "Legs",
+                type: "isolation",
+                equipment: ["Full Gym", "Dumbbells Only", "Bodyweight Only"],
+                description: "Unilateral leg builder that improves balance, coordination, and muscle symmetry.",
+                steps: ["Step forward with one leg.", "Lower hips until both knees are 90 degrees.", "Push off front foot to return.", "Alternate legs."]
+            },
+            {
+                name: "Leg Extensions",
+                muscle: "Legs",
+                type: "isolation",
+                equipment: ["Full Gym"],
+                description: "Isolates the quadriceps for definition and strength.",
+                steps: ["Sit in machine, pads on lower shins.", "Extend legs until straight.", "Squeeze quads at the top.", "Lower with control."]
+            },
+            // Shoulders
+            {
+                name: "Overhead Press",
+                muscle: "Shoulders",
+                type: "compound",
+                equipment: ["Full Gym", "Dumbbells Only"],
+                description: "Builds broad shoulders and total upper body pressing power.",
+                steps: ["Hold weight at shoulder level.", "Press straight up overhead.", "Lock out elbows at top.", "Lower back to shoulders."]
+            },
+            {
+                name: "Lateral Raises",
+                muscle: "Shoulders",
+                type: "isolation",
+                equipment: ["Full Gym", "Dumbbells Only"],
+                description: "The best exercise for building side delt width to give that 'V-taper' look.",
+                steps: ["Hold dumbbells at sides.", "Raise arms out to sides until parallel with floor.", "Pour the pitcher' motion with hands.", "Lower slowly."]
+            },
+            {
+                name: "Pike Push Ups",
+                muscle: "Shoulders",
+                type: "compound",
+                equipment: ["Bodyweight Only"],
+                description: "A bodyweight press that targets the shoulders similarly to an overhead press.",
+                steps: ["Start in pushup position, then hike hips way up.", "Lower head towards floor.", "Push back away from floor.", "Keep modification for difficulty."]
+            },
+            // Arms (Split)
+            {
+                name: "Barbell Curls",
+                muscle: "Biceps",
+                type: "isolation",
+                equipment: ["Full Gym", "Dumbbells Only"],
+                description: "Classic mass builder for the biceps.",
+                steps: ["Hold bar with underhand grip.", "Curl weight up towards shoulders.", "Squeeze biceps at top.", "Lower fully."]
+            },
+            {
+                name: "Tricep Dips",
+                muscle: "Triceps",
+                type: "compound",
+                equipment: ["Full Gym", "Bodyweight Only"],
+                description: "Compound movement for triceps and lower chest mass.",
+                steps: ["Support bodyweight on bars or bench.", "Lower body by bending elbows.", "Push back up to straight arms.", "Keep torso upright for triceps focus."]
+            },
+            {
+                name: "Skullcrushers",
+                muscle: "Triceps",
+                type: "isolation",
+                equipment: ["Full Gym", "Dumbbells Only"],
+                description: "Isolates the long head of the triceps for arm size.",
+                steps: ["Lie on bench, weight straight up.", "Bend elbows to lower weight to forehead.", "Extend arms back to start.", "Keep elbows tucked in."]
+            },
+            // Abs
+            {
+                name: "Plank",
+                muscle: "Abs",
+                type: "compound",
+                equipment: ["Bodyweight Only", "Full Gym", "Dumbbells Only"],
+                description: "The gold standard for core stability and strength.",
+                steps: ["Start on forearms and toes.", "Keep body in a straight line.", "Engage core and glutes.", "Hold as long as possible."]
+            },
+            {
+                name: "Crunches",
+                muscle: "Abs",
+                type: "isolation",
+                equipment: ["Bodyweight Only", "Full Gym", "Dumbbells Only"],
+                description: "Targets the upper abdominals for definition.",
+                steps: ["Lie on back, knees bent.", "Hands behind head or across chest.", "curl shoulders off the floor.", "Squeeze abs at the top."]
+            },
+            {
+                name: "Leg Raises",
+                muscle: "Abs",
+                type: "isolation",
+                equipment: ["Bodyweight Only", "Full Gym"],
+                description: "Targets the lower abdominals and hip flexors.",
+                steps: ["Lie flat on back.", "Keep legs straight.", "Lift legs until 90 degrees.", "Lower slowly without touching floor."]
+            },
+            // Forearms
+            {
+                name: "Wrist Curls",
+                muscle: "Forearms",
+                type: "isolation",
+                equipment: ["Full Gym", "Dumbbells Only"],
+                description: "Builds forearm size and grip strength.",
+                steps: ["Rest forearms on bench, palms up.", "Hold weight in hands.", "Curl wrists up.", "Lower fully to stretch."]
+            },
+            {
+                name: "Farmers Walk",
+                muscle: "Forearms",
+                type: "compound",
+                equipment: ["Full Gym", "Dumbbells Only"],
+                description: "Builds grip strength, traps, and core stability.",
+                steps: ["Hold heavy weights in each hand.", "Stand tall with chest up.", "Walk for distance or time.", "Don't let weights swing."]
+            },
+            // Neck
+            {
+                name: "Neck Curls",
+                muscle: "Neck",
+                type: "isolation",
+                equipment: ["Bodyweight Only", "Full Gym"],
+                description: "Strengthens the front of the neck.",
+                steps: ["Lie on back on bench, head hanging off.", "Place light plate or hand on forehead.", "Bring chin to chest.", "Lower controlled."]
+            },
+            // Cardio
+            {
+                name: "Running",
+                muscle: "Cardio",
+                type: "compound",
+                equipment: ["Bodyweight Only", "Full Gym"],
+                description: "Improves cardiovascular health and endurance.",
+                steps: ["Maintain good posture.", "Land mid-foot.", "Keep breathing rhythmic.", "Pace yourself."]
+            },
+            {
+                name: "Burpees",
+                muscle: "Cardio",
+                type: "compound",
+                equipment: ["Bodyweight Only"],
+                description: "Full body metabolic conditioning.",
+                steps: ["Drop to pushup position.", "Jump feet in.", "Jump up explosively.", "Repeat."]
+            }
+        ];
+
+        const Generators = {
+            getWarmup: (group) => {
+                // Heuristic for warmups based on the first muscle group of the name
+                if (group.includes("Chest")) return "Push-ups & Arm Circles x 2 sets";
+                if (group.includes("Back")) return "Band Pull-aparts & Rows x 2 sets";
+                if (group.includes("Legs")) return "Bodyweight Squats & Lunges x 2 sets";
+                if (group.includes("Shoulders")) return "Arm Circles & Light Presses x 2 sets";
+                if (group.includes("Abs")) return "Plank & Jumping Jacks x 2 sets";
+                if (group.includes("Cardio")) return "Dynamic Stretching";
+                if (group.includes("Rest")) return "Light Stretching";
+                return "Jumping Jacks x 60s";
+            },
+
+            generateWeeklyPlan: (userConfig) => {
+                const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+                const plan = [];
+
+                // "Two Muscle Works" Splits + Extras
+                // We will append smaller groups to the main splits
+                // CRITICAL: Sunday (Index 6) MUST be Rest.
+                const splitOptions = {
+                    3: ["Chest & Triceps", "Rest", "Back & Biceps", "Rest", "Legs & Shoulders", "Cardio & Abs", "Rest"],
+                    4: ["Chest & Triceps", "Back & Biceps", "Rest", "Legs & Shoulders", "Cardio & Abs", "Rest", "Rest"],
+                    5: ["Chest & Triceps", "Back & Biceps", "Legs & Shoulders", "Rest", "Chest & Triceps", "Back & Biceps", "Rest"], // Abs/Cardio/Neck are integrated as finishers
+                    6: ["Chest & Triceps", "Back & Biceps", "Legs & Shoulders", "Chest & Triceps", "Back & Biceps", "Cardio & Abs", "Rest"]
+                };
+
+                // Fallback or selection
+                let selectedSplit = splitOptions[userConfig.frequency] || splitOptions[4];
+
+                // Ensure we have 7 days in the split, fill rest with Rest if needed (though the above are 7 length)
+
+                // Map compound strings to arrays
+                const muscleMap = {
+                    "Chest & Triceps": ["Chest", "Triceps", "Abs"], // Added Abs as finisher
+                    "Back & Biceps": ["Back", "Biceps", "Forearms"], // Added Forearms
+                    "Legs & Shoulders": ["Legs", "Shoulders", "Neck"], // Added Neck
+                    "Cardio & Abs": ["Cardio", "Abs"],
+                    "Rest": []
+                };
+
+                for (let i = 0; i < 7; i++) {
+                    const focusName = selectedSplit[i] || "Rest";
+                    const muscleGroups = muscleMap[focusName] || [];
+                    const isRest = focusName === "Rest";
+
+                    const dayObj = {
+                        day: days[i],
+                        focus: focusName,
+                        isRest: isRest,
+                        exercises: []
+                    };
+
+                    if (!isRest) {
+                        // For each muscle in the pair
+                        muscleGroups.forEach(muscle => {
+                            let available = ExerciseDB.filter(ex =>
+                                ex.muscle === muscle &&
+                                (ex.equipment.includes(userConfig.equipment) || ex.equipment.includes("Bodyweight Only"))
+                            );
+
+                            // Shuffle
+                            available.sort(() => Math.random() - 0.5);
+
+                            // Volume Logic based on Experience
+                            let count = 2; // Default Intermediate
+                            if (userConfig.experience === "Beginner") count = 1;
+                            if (userConfig.experience === "Advanced") count = 3;
+
+                            // Adjust for smaller muscles (finishers)
+                            if (["Abs", "Forearms", "Neck", "Cardio"].includes(muscle) && muscleGroups.length > 2) {
+                                count = 1; // Just 1 exercise for these if added as 3rd muscle
+                            }
+
+                            // Select distinct
+                            const selected = available.slice(0, count);
+                            dayObj.exercises.push(...selected);
+                        });
+                    }
+
+                    plan.push(dayObj);
+                }
+
+                return plan;
+            },
+
+            getWaterGoal: (weight) => {
+                const calculated = (weight || 0) * 35; // 35ml per kg
+                const minimum = 3000; // 3 Liters minimum
+                return Math.max(minimum, calculated); // Returns the LARGER of the two, enforcing the minimum
+            }
+        };
+
+        // --- ROUTER & APP CORE ---
+        const App = {
+            init() {
+                AppState.init().then(() => {
+                    const params = new URLSearchParams(window.location.search);
+                    if (!AppState.session && !localStorage.getItem('fitflow_skiplogin') && !AppState.data.user.onboarded) {
+                        // Decide flow
+                        this.router.navigate('login');
+                    }
+                    else if (!AppState.data.user.onboarded) {
+                        this.router.navigate('onboarding');
+                    } else {
+                        // Check if plan exists
+                        if (!AppState.data.plan || AppState.data.plan.length === 0) {
+                            const newPlan = Generators.generateWeeklyPlan(AppState.data.user);
+                            AppState.data.plan = newPlan;
+                            AppState.save();
+                        }
+                        this.router.navigate('dashboard');
+                    }
+                });
+            },
+
+            router: {
+                current: null,
+                navigate(viewName, navEl = null) {
+                    this.current = viewName;
+
+                    // Render View
+                    const appEl = document.getElementById('app');
+                    appEl.innerHTML = ''; // Clear current
+
+                    // Update Nav
+                    const nav = document.getElementById('nav');
+                    if (['onboarding', 'workout', 'login', 'signup'].includes(viewName)) {
+                        nav.classList.add('hidden');
+                    } else {
+                        nav.classList.remove('hidden');
+                        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+                        if (navEl) {
+                            navEl.classList.add('active');
+                        } else {
+                            // Auto-highlight based on view name fallback
+                            if (viewName === 'dashboard') document.querySelectorAll('.nav-item')[0].classList.add('active');
+                            if (viewName === 'plan') document.querySelectorAll('.nav-item')[1].classList.add('active');
+                            if (viewName === 'leaderboard') document.querySelectorAll('.nav-item')[2].classList.add('active');
+                            if (viewName === 'profile') document.querySelectorAll('.nav-item')[3].classList.add('active');
+                        }
+                    }
+
+                    // View Injection
+                    if (Views[viewName]) {
+                        appEl.innerHTML = Views[viewName]();
+                        // Run any post-render scripts if needed (attach listeners etc)
+                        if (ViewControllers[viewName]) {
+                            setTimeout(() => ViewControllers[viewName](), 0);
+                        }
+                    } else {
+                        appEl.innerHTML = `<div class="fade-in"><h1>404</h1><p>View not found</p></div>`;
+                    }
+                }
+            }
+        };
+
+        // --- VIEWS ---
+        const Views = {
+            login: () => `
+                <div class="fade-in" style="padding-top: 50px; text-align: center;">
+                    <h1>FitFlow V2</h1>
+                    <p style="color: var(--text-muted); margin-bottom: 40px;">Sync across devices. Never lose gains.</p>
+                    
+                    <form onsubmit="event.preventDefault(); Handlers.handleLogin();" style="text-align: left;">
+                         <div class="input-group">
+                            <label class="input-label">Email</label>
+                            <input type="email" id="login-email" required>
+                        </div>
+                        <div class="input-group">
+                            <label class="input-label">Password</label>
+                            <input type="password" id="login-password" required>
+                        </div>
+                        <button type="submit" class="btn" style="margin-top: 20px;">
+                            Log In
+                        </button>
+                    </form>
+
+                    <p style="margin-top: 20px; font-size: 0.9rem;">
+                        No account? <a href="#" onclick="event.preventDefault(); App.router.navigate('signup')" style="color: var(--primary); font-weight: 600;">Sign Up</a>
+                    </p>
+                    <p style="margin-top: 20px; font-size: 0.9rem;">
+                         <a href="#" onclick="event.preventDefault(); Handlers.skipAuth()" style="color: var(--text-muted);">Continue Offline</a>
+                    </p>
+                </div>
+            `,
+            signup: () => `
+                <div class="fade-in" style="padding-top: 30px; text-align: center;">
+                    <h1>Create Account</h1>
+                    
+                    <form onsubmit="event.preventDefault(); Handlers.handleSignup();" style="text-align: left; margin-top: 30px;">
+                         <div class="input-group">
+                            <label class="input-label">Username</label>
+                            <input type="text" id="su-name" required>
+                        </div>
+                        <div class="input-group">
+                            <label class="input-label">Email</label>
+                            <input type="email" id="su-email" required>
+                        </div>
+                        <div class="input-group">
+                            <label class="input-label">Password</label>
+                            <input type="password" id="su-password" required>
+                        </div>
+                        
+                         <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <div class="input-group">
+                                <label class="input-label">Weight (kg)</label>
+                                <input type="number" id="su-weight" required>
+                            </div>
+                            <div class="input-group">
+                                <label class="input-label">Height (cm)</label>
+                                <input type="number" id="su-height" required>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn" style="margin-top: 20px;">
+                            Sign Up
+                        </button>
+                    </form>
+
+                    <p style="margin-top: 20px; font-size: 0.9rem;">
+                        Already have an account? <a href="#" onclick="event.preventDefault(); App.router.navigate('login')" style="color: var(--primary); font-weight: 600;">Log In</a>
+                    </p>
+                </div>
+            `,
+            onboarding: () => `
+                <div class="fade-in" style="padding-top: 40px;">
+                    <h1>Welcome to <br><span style="color: var(--text-muted)">FitFlow</span></h1>
+                    <p style="margin-top: 10px; color: var(--text-muted); margin-bottom: 40px;">Let's customize your experience.</p>
+                    
+                    <form id="onboarding-form" onsubmit="event.preventDefault(); Handlers.completeOnboarding();">
+                        <div class="input-group">
+                            <label class="input-label">What should we call you?</label>
+                            <input type="text" id="ob-name" placeholder="Your Name" required>
+                        </div>
+
+                        <div class="input-group">
+                            <label class="input-label">What is your main goal?</label>
+                            <div class="pill-group">
+                                <input type="radio" name="goal" id="g-muscle" value="Build Muscle" class="pill-radio" checked>
+                                <label for="g-muscle" class="pill-label">Build Muscle</label>
+                                
+                                <input type="radio" name="goal" id="g-strength" value="Strength" class="pill-radio">
+                                <label for="g-strength" class="pill-label">Get Stronger</label>
+                                
+                                <input type="radio" name="goal" id="g-tone" value="Lean & Toned" class="pill-radio">
+                                <label for="g-tone" class="pill-label">Lean & Toned</label>
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label class="input-label">Equipment Access</label>
+                            <select id="ob-equip">
+                                <option value="Full Gym">Full Gym</option>
+                                <option value="Dumbbells Only">Dumbbells Only</option>
+                                <option value="Bodyweight Only">Bodyweight Only</option>
+                            </select>
+                        </div>
+                        
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <div class="input-group">
+                                <label class="input-label">Days / Week</label>
+                                <select id="ob-freq">
+                                    <option value="3">3 Days</option>
+                                    <option value="4" selected>4 Days</option>
+                                    <option value="5">5 Days</option>
+                                    <option value="6">6 Days</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label class="input-label">Experience</label>
+                                <select id="ob-exp">
+                                    <option value="Beginner">Beginner</option>
+                                    <option value="Intermediate" selected>Intermediate</option>
+                                    <option value="Advanced">Advanced</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <div class="input-group">
+                                <label class="input-label">Weight (kg)</label>
+                                <input type="number" id="ob-weight" placeholder="e.g. 75" required>
+                            </div>
+                            <div class="input-group">
+                                <label class="input-label">Height (cm)</label>
+                                <input type="number" id="ob-height" placeholder="e.g. 180" required>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top: 40px;">
+                            <button type="submit" class="btn">
+                                Start Journey
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            `,
+            dashboard: () => {
+                // Get today's workout
+                // For simplicity, map day of week index (Mon=0) to plan index
+                const dayIndex = (new Date().getDay() + 6) % 7; // Convert Sun=0 to Mon=0
+                const todayPlan = AppState.data.plan[dayIndex] || { focus: "Rest", exercises: [] };
+
+                // Hydration Logic
+                const dateKey = new Date().toISOString().split('T')[0];
+                const historyToday = AppState.data.history[dateKey] || {};
+                const currentWater = historyToday.water || 0;
+                const waterGoal = Generators.getWaterGoal(AppState.data.user.weight);
+                const waterPct = Math.min(100, Math.round((currentWater / waterGoal) * 100));
+
+                return `
+                <div class="fade-in">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                        <div>
+                            <p style="font-size: 0.9rem; color: var(--text-muted); font-weight: 500;">${new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
+                            <h2>Hi, ${AppState.data.user.name}</h2>
+                        </div>
+                        <div style="width: 40px; height: 40px; background: #e5e7eb; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700;">
+                            ${AppState.data.user.name.charAt(0)}
+                        </div>
+                    </div>
+
+                    <div class="card" style="background: var(--primary); color: white;">
+                        <span style="background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600;">TODAY'S FOCUS</span>
+                        <h1 style="font-size: 2.5rem; margin: 15px 0;">${todayPlan.focus}</h1>
+                        <p style="opacity: 0.8; margin-bottom: 25px;">
+                            ${todayPlan.isRest ? "Active Recovery" : `${todayPlan.exercises.length} Exercises`}
+                        </p>
+                        
+                        ${!todayPlan.isRest ? `
+                            ${(AppState.data.history[new Date().toISOString().split('T')[0]] || {}).completed ? `
+                                <div style="margin-top:20px; text-align:center; padding:20px; background:rgba(255,255,255,0.2); border-radius:12px;">
+                                    <h3 style="margin-bottom:5px;">Workout Complete!</h3>
+                                    <p style="font-size:0.9rem; opacity:0.9;">Great job today.</p>
+                                </div>
+                            ` : `
+                            <div style="margin-bottom: 25px;">
+                                <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 8px; opacity: 0.8; font-weight: 600;">
+                                    <span>PROGRESS</span>
+                                    <span>${(() => {
+                            const current = AppState.data.currentWorkout;
+                            if (!current || current.index !== dayIndex) return '0%';
+                            let totalSets = 0;
+                            let completedSets = 0;
+                            current.exercises.forEach(ex => {
+                                const setNums = (AppState.data.user.experience === 'Beginner' ? [1, 2] :
+                                    AppState.data.user.experience === 'Advanced' ? [1, 2, 3, 4] : [1, 2, 3]);
+                                totalSets += setNums.length;
+                                completedSets += (ex.completedSets || []).length;
+                            });
+                            return Math.round((completedSets / totalSets) * 100) + '%';
+                        })()}</span>
+                                </div>
+                                <div style="height: 6px; background: rgba(255,255,255,0.2); border-radius: 10px; overflow: hidden;">
+                                    <div style="height: 100%; background: white; width: ${(() => {
+                            const current = AppState.data.currentWorkout;
+                            if (!current || current.index !== dayIndex) return '0%';
+                            let totalSets = 0;
+                            let completedSets = 0;
+                            current.exercises.forEach(ex => {
+                                const setNums = (AppState.data.user.experience === 'Beginner' ? [1, 2] :
+                                    AppState.data.user.experience === 'Advanced' ? [1, 2, 3, 4] : [1, 2, 3]);
+                                totalSets += setNums.length;
+                                completedSets += (ex.completedSets || []).length;
+                            });
+                            return (completedSets / totalSets) * 100 + '%';
+                        })()}; transition: width 0.3s ease;"></div>
+                                </div>
+                            </div>
+                            <button class="btn" style="background: white; color: var(--primary);" onclick="Handlers.startWorkout(${dayIndex})">
+                                ${AppState.data.currentWorkout && AppState.data.currentWorkout.index === dayIndex ? 'Continue Workout' : 'Start Workout'}
+                            </button>
+                            `}
+                        ` : `
+                            <button class="btn" style="background: white; color: var(--primary); opacity: 0.5; cursor: default;">
+                                Rest Day
+                            </button>
+                        `}
+                    </div>
+
+                    <!-- Hydration Card -->
+                     <div class="card" style="background: #E0F2FE;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                             <h4 style="color:#0369A1; display:flex; align-items:center; gap:8px;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+                                Hydration <span style="font-size:0.7rem; font-weight:400; opacity:0.8;">(Min 3L or Weight x 35)</span>
+                             </h4>
+                             <span style="font-weight:700; color:#0369A1;">${(currentWater / 1000).toFixed(1)} / ${(waterGoal / 1000).toFixed(1)} L</span>
+                        </div>
+                        
+                        <div style="height:10px; background:rgba(255,255,255,0.5); border-radius:20px; overflow:hidden; margin-bottom:20px;">
+                            <div style="height:100%; width:${waterPct}%; background:#0284C7; transition:all 0.3s ease;"></div>
+                        </div>
+
+                        <div style="display:flex; gap:10px;">
+                            <button style="flex:1; background:white; border:none; padding:12px; border-radius:12px; color:#0369A1; font-weight:700; cursor:pointer;" onclick="Handlers.addWater(-250)">-250ml</button>
+                            <button style="flex:1; background:#0284C7; border:none; padding:12px; border-radius:12px; color:white; font-weight:700; cursor:pointer; box-shadow:0 10px 15px -3px rgba(3, 105, 161, 0.3);" onclick="Handlers.addWater(250)">+250ml</button>
+                        </div>
+                    </div>
+
+                    <h3 style="margin-bottom: 15px;">Resources</h3>
+                    <div class="card">
+                        <h4>Daily Tip</h4>
+                        <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 5px;">
+                            ${todayPlan.isRest ? "Drink plenty of water and stretch." : "Focus on controlled eccentrics today."}
+                        </p>
+                    </div>
+                </div>
+            `},
+            workout: () => {
+                const session = AppState.data.currentWorkout;
+                if (!session) return `<h1>Error: No active session</h1>`;
+
+                const warmupText = Generators.getWarmup(session.focus);
+
+                let html = `
+                <div class="fade-in" style="padding-bottom: 120px;">
+                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+                        <button class="btn-outline" style="width: auto; padding: 8px 12px; border-radius: 12px;" onclick="App.router.navigate('dashboard')">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                        </button>
+                        <h2 style="font-size: 1.5rem;">${session.focus}</h2>
+                    </div>
+
+                    <!-- Warmup -->
+                    <div class="card" style="background: var(--warmup); color: var(--warmup-text);">
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                            <span style="font-weight: 700; text-transform: uppercase; font-size: 0.8rem;">Warm Up</span>
+                        </div>
+                        <p style="font-weight: 500;">${warmupText}</p>
+                    </div>
+
+                    <!-- Exercises -->
+                    <div id="exercise-list">
+                `;
+
+                session.exercises.forEach((ex, idx) => {
+                    // Smart Input Logic
+                    const history = AppState.data.exerciseHistory[ex.name];
+                    let defaultWeight = "";
+                    let defaultReps = "";
+                    let badge = "";
+
+                    if (history) {
+                        if (ex.equipment.includes("Bodyweight Only") && !ex.equipment.includes("Full Gym")) {
+                            // Pure Bodyweight
+                            defaultReps = history.reps + 2;
+                            badge = `↑ Last: ${history.reps} reps`;
+                        } else {
+                            // Weighted
+                            defaultWeight = history.weight + 2.5;
+                            defaultReps = history.reps;
+                            badge = `↑ Last: ${history.weight}kg`;
+                        }
+                    } else {
+                        // Defaults for new exercises
+                        defaultReps = "10"; // Placeholder
+                    }
+
+                    const isBodyweight = ex.equipment.includes("Bodyweight Only") && !ex.equipment.includes("Full Gym") && !ex.equipment.includes("Dumbbells Only");
+
+                    html += `
+                    <div class="card">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
+                            <div onclick="Handlers.showExerciseInfo(${idx})" style="cursor: pointer;">
+                                <h3 style="font-size: 1.1rem; margin-bottom: 4px; display:flex; align-items:center; gap:8px;">
+                                    ${ex.name} 
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.5"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                                </h3>
+                                <div style="display: flex; gap: 8px; align-items: center;">
+                                    <span style="font-size: 0.8rem; color: var(--text-muted); padding: 2px 8px; background: #f3f4f6; border-radius: 6px;">${ex.muscle}</span>
+                                    ${badge ? `<span style="font-size: 0.75rem; color: var(--success-text); background: var(--success); padding: 2px 8px; border-radius: 6px;">${badge}</span>` : ''}
+                                </div>
+                            </div>
+                            <button onclick="Handlers.swapExercise(${idx})" style="background: #f3f4f6; border: none; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--text-muted);">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                            </button>
+                        </div>
+
+                        <div style="display: flex; gap: 10px; flex-direction: column;">
+                            ${(AppState.data.user.experience === 'Beginner' ? [1, 2] :
+                            AppState.data.user.experience === 'Advanced' ? [1, 2, 3, 4] : [1, 2, 3]).map(setNum => {
+                                const isCompleted = (ex.completedSets || []).includes(setNum);
+                                return `
+                                <div class="set-row ${isCompleted ? 'completed' : ''}" style="display: flex; align-items: center; gap: 10px; border-bottom: none; padding: 5px 0;">
+                                    <div style="width: 24px; font-weight: 600; color: var(--text-muted); font-size: 0.9rem;">${setNum}</div>
+                                    <input type="number" class="ex-input weight-${idx}" placeholder="kg" style="${isBodyweight ? 'display:none' : ''}" value="${defaultWeight}">
+                                    <input type="number" class="ex-input reps-${idx}" placeholder="Reps" value="${defaultReps}">
+                                    
+                                    <div class="checkbox-wrapper">
+                                        <input type="checkbox" id="set-${idx}-${setNum}" onchange="Handlers.checkSet(this, '${ex.type}', ${idx}, ${setNum})" ${isCompleted ? 'checked' : ''}>
+                                        <label for="set-${idx}-${setNum}" style="
+                                            width: 28px; height: 28px; 
+                                            border-radius: 50%; 
+                                            border: 2px solid #e5e7eb; 
+                                            display: block; 
+                                            cursor: pointer;
+                                            position: relative;
+                                        "></label>
+                                        <style>
+                                            #set-${idx}-${setNum} { display: none; }
+                                            #set-${idx}-${setNum}:checked + label {
+                                                background: var(--success);
+                                                border-color: var(--success);
+                                            }
+                                            #set-${idx}-${setNum}:checked + label::after {
+                                                content: '';
+                                                position: absolute;
+                                                top: 50%; left: 50%;
+                                                transform: translate(-50%, -50%);
+                                                width: 12px; height: 12px;
+                                                background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="4"><polyline points="20 6 9 17 4 12"/></svg>') no-repeat center center;
+                                                background-size: contain;
+                                            }
+                                        </style>
+                                    </div>
+                                </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                    `;
+                });
+
+                html += `
+                    </div>
+                
+                    <div style="margin-top: 30px;">
+                        <label class="input-label">RPE (Exertion Level 1-10)</label>
+                        <input type="range" min="1" max="10" value="8" id="workout-rpe" style="width: 100%; margin-bottom: 20px;">
+                        
+                        <button class="btn" style="background: var(--primary); color: white;" onclick="Handlers.finishWorkout()">
+                            Finish Workout
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4"/></svg>
+                        </button>
+                    </div>
+                </div>
+                `;
+
+                return html;
+            },
+            plan: () => {
+                const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+                // Shift based on plan structure? The plan is 0-7 starting Mon.
+                // AppState.data.plan is 0=Mon.
+                const todayIdx = (new Date().getDay() + 6) % 7;
+
+                let html = `<div class="fade-in" style="padding-bottom: 100px;"><h1>Weekly Plan</h1><div style="margin-top:20px; display:flex; flex-direction:column; gap:10px;">`;
+
+                AppState.data.plan.forEach((day, i) => {
+                    const isToday = i === todayIdx;
+                    html += `
+                    <div class="card" style="margin-bottom:0; padding: 20px; ${isToday ? 'border: 2px solid var(--primary);' : ''} display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <span style="font-size:0.8rem; color:var(--text-muted); font-weight:600; text-transform:uppercase;">${days[i]}</span>
+                            <h3 style="margin:4px 0 0 0; font-size:1.1rem;">${day.focus}</h3>
+                        </div>
+                        <div style="text-align:right;">
+                            ${day.isRest ? '<span style="color:var(--text-muted);">Rest</span>' : `<span style="font-weight:600;">${day.exercises.length} Ex</span>`}
+                        </div>
+                    </div>`;
+                });
+
+                html += `</div></div>`;
+                return html;
+            },
+            profile: () => {
+                const streakMode = AppState.ui.streakMode || 'workout';
+                const streak = streakMode === 'workout' ? AppState.getStreak() : AppState.getWaterStreak();
+                const calData = AppState.getCalendarData();
+
+                return `
+                <div class="fade-in" style="padding-bottom: 100px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h1>Profile</h1>
+                         <div style="display: flex; gap: 10px;">
+                            ${AppState.session ? `
+                                <button class="btn-outline" style="width:auto; padding:8px 16px; font-size:0.8rem; border-radius:12px;" onclick="Handlers.handleLogout()">
+                                    Logout
+                                </button>
+                            ` : `
+                                <button class="btn-outline" style="width:auto; padding:8px 16px; font-size:0.8rem; border-radius:12px;" onclick="App.router.navigate('login')">
+                                    Login / Sync
+                                </button>
+                            `}
+                        </div>
+                    </div>
+
+                    <div class="card" style="display:flex; flex-direction:column; align-items:center; padding:30px;">
+                        
+                        <!-- Toggle -->
+                        <div style="background:#F3F4F6; padding:4px; border-radius:100px; display:flex; margin-bottom:20px;">
+                            <button onclick="Handlers.setStreakMode('workout')" style="padding:6px 16px; border-radius:100px; border:none; font-weight:600; font-size:0.8rem; cursor:pointer; background:${streakMode === 'workout' ? 'white' : 'transparent'}; color:${streakMode === 'workout' ? 'var(--primary)' : 'var(--text-muted)'}; box-shadow:${streakMode === 'workout' ? '0 2px 10px rgba(0,0,0,0.1)' : 'none'}; transition:all 0.2s ease;">Workout</button>
+                            <button onclick="Handlers.setStreakMode('water')" style="padding:6px 16px; border-radius:100px; border:none; font-weight:600; font-size:0.8rem; cursor:pointer; background:${streakMode === 'water' ? 'white' : 'transparent'}; color:${streakMode === 'water' ? '#0369A1' : 'var(--text-muted)'}; box-shadow:${streakMode === 'water' ? '0 2px 10px rgba(0,0,0,0.1)' : 'none'}; transition:all 0.2s ease;">Water</button>
+                        </div>
+
+                        <div class="streak-counter">
+                            <div class="streak-val" style="color:${streakMode === 'water' ? '#0369A1' : 'var(--primary)'}">
+                                ${streak} <span style="font-size:1.5rem;">${streakMode === 'water' ? '💧' : '🔥'}</span>
+                            </div>
+                            <div class="streak-label">${streakMode} Streak</div>
+                        </div>
+                        
+                        <div style="width:100%;">
+                            <h4 style="margin-bottom:10px;">Last 4 Weeks</h4>
+                            <div class="cal-grid">
+                                <span style="font-size:0.7rem; text-align:center; color:var(--text-muted)">S</span>
+                                <span style="font-size:0.7rem; text-align:center; color:var(--text-muted)">M</span>
+                                <span style="font-size:0.7rem; text-align:center; color:var(--text-muted)">T</span>
+                                <span style="font-size:0.7rem; text-align:center; color:var(--text-muted)">W</span>
+                                <span style="font-size:0.7rem; text-align:center; color:var(--text-muted)">T</span>
+                                <span style="font-size:0.7rem; text-align:center; color:var(--text-muted)">F</span>
+                                <span style="font-size:0.7rem; text-align:center; color:var(--text-muted)">S</span>
+                                
+                                ${calData.map(d => `
+                                    <div class="cal-day ${d.completed ? 'active' : ''} ${d.isToday ? 'today' : ''}">
+                                        ${d.date}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-bottom:20px;">
+                         <div class="card">
+                            <h3 style="font-size:2rem; color:var(--primary);">${Object.keys(AppState.data.history).length}</h3>
+                            <p style="color:var(--text-muted); font-size:0.9rem;">Total Workouts</p>
+                         </div>
+                         <div class="card">
+                            <h3 style="font-size:2rem; color:var(--primary);">${AppState.data.user.frequency} <span style="font-size:1rem;">x/wk</span></h3>
+                            <p style="color:var(--text-muted); font-size:0.9rem;">Frequency</p>
+                         </div>
+                    </div>
+
+                    <h3>Stats</h3>
+                    <div class="card" style="margin-top:15px;">
+                        ${Object.keys(AppState.data.exerciseHistory).length === 0 ?
+                        `<p style="color:var(--text-muted)">Complete workouts to see stats here.</p>` :
+                        `<ul style="list-style:none; padding:0; margin:0;">
+                                ${Object.entries(AppState.data.exerciseHistory).slice(0, 5).map(([name, data]) => `
+                                <li style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #f3f4f6;">
+                                    <span>${name}</span>
+                                    <span style="font-weight:600;">${data.weight > 0 ? data.weight + 'kg' : data.reps + ' reps'}</span>
+                                </li>
+                                `).join('')}
+                            </ul>`
+                    }
+                    </div>
+                </div>
+                `;
+            }
+        };
+
+        const ViewControllers = {
+            onboarding: () => {
+                // Focus name input
+                setTimeout(() => document.getElementById('ob-name').focus(), 500);
+            },
+            leaderboard: async () => {
+                Handlers.switchLeaderboardTab('global'); // Default load
+            }
+        };
+
+        const Handlers = {
+            skipAuth: () => {
+                localStorage.setItem('fitflow_skiplogin', 'true');
+                if (!AppState.data.user.onboarded) {
+                    App.router.navigate('onboarding');
+                } else {
+                    App.router.navigate('dashboard');
+                }
+            },
+
+            handleLogin: async () => {
+                if (!supabaseClient) { Utils.toast('Supabase Not Configured', 'default'); return; }
+                const email = document.getElementById('login-email').value;
+                const password = document.getElementById('login-password').value;
+
+                const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+                if (error) {
+                    Utils.toast(error.message, 'default');
+                } else {
+                    Utils.toast('Logged In!', 'success');
+                    AppState.session = data.session; // Should trigger init pull via listener but manual nav is safer
+                    App.router.navigate('dashboard');
+                }
+            },
+
+            handleSignup: async () => {
+                if (!supabaseClient) { Utils.toast('Supabase Not Configured', 'default'); return; }
+                const email = document.getElementById('su-email').value;
+                const password = document.getElementById('su-password').value;
+                const name = document.getElementById('su-name').value;
+                const weight = document.getElementById('su-weight').value;
+                const height = document.getElementById('su-height').value;
+
+                const { data, error } = await supabaseClient.auth.signUp({
+                    email,
+                    password,
+                    options: {
+                        data: { display_name: name, weight, height }
+                    }
+                });
+
+                if (error) {
+                    Utils.toast(error.message, 'default');
+                } else {
+                    Utils.toast('Account Created!', 'success');
+                    // Pre-fill user data
+                    AppState.updateUser({ name, weight, height });
+                    App.router.navigate('onboarding');
+                }
+            },
+
+            handleLogout: async () => {
+                await supabaseClient.auth.signOut();
+                AppState.session = null;
+                // Optional: Clear local data? Or keep it? keeping it is "offline first"
+                // But maybe we want to protect privacy. Let's redirect to login.
+                App.router.navigate('login');
+            },
+
+            addWater: (amount) => {
+                const dateKey = new Date().toISOString().split('T')[0];
+                const todayEntry = AppState.data.history[dateKey] || {};
+                const current = todayEntry.water || 0;
+
+                let newVal = current + amount;
+                if (newVal < 0) newVal = 0;
+
+                AppState.recordHistory(dateKey, {
+                    ...todayEntry,
+                    water: newVal
+                });
+
+                App.router.navigate('dashboard'); // Re-render
+            },
+
+            setStreakMode: (mode) => {
+                AppState.ui.streakMode = mode;
+                App.router.navigate('profile'); // Re-render
+            },
+
+            // --- SOCIAL HANDLERS ---
+            switchLeaderboardTab: async (tab) => {
+                const globalBtn = document.getElementById('tab-global');
+                const friendsBtn = document.getElementById('tab-friends');
+                const list = document.getElementById('leaderboard-list');
+                const addSection = document.getElementById('add-friend-section');
+
+                if (tab === 'global') {
+                    if (globalBtn) {
+                        globalBtn.style.background = 'white';
+                        globalBtn.style.color = 'var(--text-main)';
+                        globalBtn.style.boxShadow = '0 2px 5px rgba(0,0,0,0.05)';
+                    }
+                    if (friendsBtn) {
+                        friendsBtn.style.background = 'transparent';
+                        friendsBtn.style.color = 'var(--text-muted)';
+                        friendsBtn.style.boxShadow = 'none';
+                    }
+                    if (addSection) addSection.style.display = 'none';
+
+                    // Fetch Global
+                    if (!supabaseClient) {
+                        list.innerHTML = '<p style="text-align:center; padding:20px;">Offline Mode: Cannot fetch leaderboard.</p>';
+                        return;
+                    }
+
+                    list.innerHTML = '<div style="text-align:center; padding:40px; color:var(--text-muted);">Loading Global...</div>';
+
+                    const { data, error } = await supabaseClient
+                        .from('profiles')
+                        .select('*')
+                        .order('workout_streak', { ascending: false })
+                        .limit(50);
+
+                    if (error) {
+                        list.innerHTML = `<p style="text-align:center; color:red;">Error: ${error.message}</p>`;
+                        return;
+                    }
+
+                    Handlers.renderLeaderboardList(data || []);
+
+                } else {
+                    if (friendsBtn) {
+                        friendsBtn.style.background = 'white';
+                        friendsBtn.style.color = 'var(--text-main)';
+                        friendsBtn.style.boxShadow = '0 2px 5px rgba(0,0,0,0.05)';
+                    }
+                    if (globalBtn) {
+                        globalBtn.style.background = 'transparent';
+                        globalBtn.style.color = 'var(--text-muted)';
+                        globalBtn.style.boxShadow = 'none';
+                    }
+                    if (addSection) addSection.style.display = 'block';
+
+                    // Fetch Friends
+                    if (!supabaseClient || !AppState.session) {
+                        list.innerHTML = '<p style="text-align:center; padding:20px;">Login required to view friends.</p>';
+                        return;
+                    }
+
+                    list.innerHTML = '<div style="text-align:center; padding:40px; color:var(--text-muted);">Loading Friends...</div>';
+
+                    // 1. Get Friend IDs
+                    const { data: friendships, error: fError } = await supabaseClient
+                        .from('friendships')
+                        .select('friend_id')
+                        .eq('user_id', AppState.session.user.id);
+
+                    if (fError) {
+                        list.innerHTML = `<p style="text-align:center; color:red;">Error: ${fError.message}</p>`;
+                        return;
+                    }
+
+                    const friendIds = friendships.map(f => f.friend_id);
+                    friendIds.push(AppState.session.user.id); // Include self
+
+                    // 2. Fetch Profiles
+                    const { data: profiles, error: pError } = await supabaseClient
+                        .from('profiles')
+                        .select('*')
+                        .in('id', friendIds)
+                        .order('workout_streak', { ascending: false });
+
+                    if (pError) {
+                        list.innerHTML = `<p style="text-align:center; color:red;">Error: ${pError.message}</p>`;
+                        return;
+                    }
+
+                    Handlers.renderLeaderboardList(profiles || []);
+                }
+            },
+
+            renderLeaderboardList: (profiles) => {
+                const list = document.getElementById('leaderboard-list');
+                const currentUserId = AppState.session ? AppState.session.user.id : null;
+
+                if (profiles.length === 0) {
+                    list.innerHTML = '<p style="text-align:center; padding:30px; color:var(--text-muted);">No players found.</p>';
+                    return;
+                }
+
+                let html = '<div style="display:flex; flex-direction:column; gap:10px;">';
+                profiles.forEach((p, idx) => {
+                    const isMe = p.id === currentUserId;
+                    html += `
+                    <div class="card" style="margin-bottom:0; padding:15px; display:flex; align-items:center; justify-content:space-between; border: ${isMe ? '2px solid var(--primary)' : 'none'}; background: ${isMe ? '#F9FAFB' : 'white'};">
+                        <div style="display:flex; align-items:center; gap:15px;">
+                            <div style="width:30px; height:30px; background:${idx < 3 ? 'var(--warmup)' : '#e5e7eb'}; color:${idx < 3 ? 'var(--warmup-text)' : 'var(--text-muted)'}; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.9rem;">
+                                ${idx + 1}
+                            </div>
+                            <span style="font-weight:600; font-size:1rem; ${isMe ? 'color:var(--primary);' : ''}">${p.display_name} ${isMe ? '(You)' : ''}</span>
+                        </div>
+                        <div style="font-weight:700; color:var(--text-muted);">
+                            ${p.workout_streak} 🔥
+                        </div>
+                    </div>`;
+                });
+                html += '</div>';
+                list.innerHTML = html;
+            },
+
+            addFriend: async () => {
+                if (!supabaseClient || !AppState.session) {
+                    Utils.toast('Please log in first', 'default');
+                    return;
+                }
+                const username = document.getElementById('friend-username').value;
+                if (!username) return;
+
+                // 1. Find User by Display Name
+                const { data: users, error } = await supabaseClient
+                    .from('profiles')
+                    .select('id')
+                    .eq('display_name', username)
+                    .single();
+
+                if (error || !users) {
+                    Utils.toast('User not found', 'default');
+                    return;
+                }
+
+                if (users.id === AppState.session.user.id) {
+                    Utils.toast('Cannot add yourself', 'default');
+                    return;
+                }
+
+                // 2. Add Friendship
+                const { error: fError } = await supabaseClient
+                    .from('friendships')
+                    .insert({ user_id: AppState.session.user.id, friend_id: users.id });
+
+                if (fError) {
+                    if (fError.code === '23505') { // Unique violation
+                        Utils.toast('Already added', 'default');
+                    } else {
+                        Utils.toast('Error adding friend', 'default');
+                    }
+                } else {
+                    Utils.toast(`Added ${username}!`, 'success');
+                    document.getElementById('friend-username').value = '';
+                    Handlers.switchLeaderboardTab('friends'); // Refresh list
+                }
+            },
+
+            inviteFriend: () => {
+                const text = `Join me on FitFlow! My username is ${AppState.data.user.name}.`;
+                if (navigator.share) {
+                    navigator.share({
+                        title: 'FitFlow V2',
+                        text: text,
+                        url: window.location.href
+                    });
+                } else {
+                    navigator.clipboard.writeText(text);
+                    Utils.toast('Invite copied to clipboard!', 'success');
+                }
+            },
+
+            completeOnboarding: () => {
+                const name = document.getElementById('ob-name').value;
+                const goal = document.querySelector('input[name="goal"]:checked').value;
+                const equip = document.getElementById('ob-equip').value;
+                const freq = parseInt(document.getElementById('ob-freq').value);
+                const exp = document.getElementById('ob-exp').value;
+                const weight = parseFloat(document.getElementById('ob-weight').value) || 0;
+                const height = parseFloat(document.getElementById('ob-height').value) || 0;
+
+                if (name) {
+                    AppState.updateUser({
+                        name,
+                        goal,
+                        equipment: equip,
+                        frequency: freq,
+                        experience: exp,
+                        weight,
+                        height,
+                        onboarded: true
+                    });
+
+                    // Generate initial plan now that we have equipment
+                    const newPlan = Generators.generateWeeklyPlan(AppState.data.user);
+                    AppState.data.plan = newPlan;
+                    AppState.save();
+
+                    Utils.toast(`Welcome, ${name}!`);
+                    App.router.navigate('dashboard');
+                }
+            },
+
+            startWorkout: (dayIndex) => {
+                const plan = AppState.data.plan[dayIndex];
+                if (plan && !plan.isRest) {
+                    // Only initialize if not already in session OR if jumping to a different day
+                    if (!AppState.data.currentWorkout || AppState.data.currentWorkout.index !== dayIndex) {
+                        AppState.data.currentWorkout = JSON.parse(JSON.stringify(plan));
+                        AppState.data.currentWorkout.index = dayIndex;
+                        // Initialize completion tracking
+                        AppState.data.currentWorkout.exercises.forEach(ex => {
+                            ex.completedSets = [];
+                        });
+                        AppState.save();
+                    }
+                    App.router.navigate('workout');
+                }
+            },
+
+            swapExercise: (exIdx) => {
+                const session = AppState.data.currentWorkout;
+                const old = session.exercises[exIdx];
+
+                // Find substitute
+                const available = ExerciseDB.filter(ex =>
+                    ex.muscle === old.muscle &&
+                    ex.name !== old.name &&
+                    (ex.equipment.includes(AppState.data.user.equipment) || ex.equipment.includes("Bodyweight Only"))
+                );
+
+                if (available.length > 0) {
+                    const random = available[Math.floor(Math.random() * available.length)];
+                    session.exercises[exIdx] = random;
+                    Utils.toast(`Swapped to ${random.name}`);
+                    App.router.navigate('workout'); // Re-render
+
+                    // Optional: Update permanent plan
+                    AppState.data.plan[session.index].exercises[exIdx] = random;
+                    AppState.save();
+                } else {
+                    Utils.toast('No other exercises available', 'default');
+                }
+            },
+
+            checkSet: (checkbox, type, exIdx, setNum) => {
+                const row = checkbox.closest('.set-row');
+                const session = AppState.data.currentWorkout;
+                if (!session) return;
+
+                const ex = session.exercises[exIdx];
+                if (!ex.completedSets) ex.completedSets = [];
+
+                if (checkbox.checked) {
+                    row.classList.add('completed');
+                    if (!ex.completedSets.includes(setNum)) {
+                        ex.completedSets.push(setNum);
+                    }
+
+                    const duration = type === 'compound' ? 90 : 60;
+                    // ... rest of the timer logic
+                    const existing = document.querySelector('.timer-toast');
+                    if (existing) existing.remove();
+
+                    const el = document.createElement('div');
+                    el.className = 'toast timer-toast';
+                    el.innerHTML = `Rest: <span id="timer-val">${duration}</span>s`;
+                    el.onclick = () => el.remove();
+                    document.getElementById('toast-area').appendChild(el);
+
+                    let timeLeft = duration;
+                    const interval = setInterval(() => {
+                        timeLeft--;
+                        const valEl = el.querySelector('#timer-val');
+                        if (valEl) valEl.textContent = timeLeft;
+
+                        if (timeLeft <= 0) {
+                            clearInterval(interval);
+                            el.classList.add('success');
+                            el.innerHTML = "Rest Complete! Go!";
+                            setTimeout(() => el.remove(), 3000);
+                        }
+                    }, 1000);
+                } else {
+                    row.classList.remove('completed');
+                    const index = ex.completedSets.indexOf(setNum);
+                    if (index > -1) {
+                        ex.completedSets.splice(index, 1);
+                    }
+                }
+                AppState.save();
+            },
+
+            finishWorkout: () => {
+                const session = AppState.data.currentWorkout;
+
+                // Save inputs to history
+                const inputs = document.querySelectorAll('.ex-input');
+
+                session.exercises.forEach((ex, i) => {
+                    const wInput = document.querySelector(`.weight-${i}`);
+                    const rInput = document.querySelector(`.reps-${i}`);
+
+                    if (wInput && rInput) {
+                        AppState.data.exerciseHistory[ex.name] = {
+                            weight: parseFloat(wInput.value) || 0,
+                            reps: parseFloat(rInput.value) || 0,
+                            date: new Date().toISOString()
+                        };
+                    }
+                });
+
+                // Save Session to History
+                const rpe = document.getElementById('workout-rpe').value;
+                const dateKey = new Date().toISOString().split('T')[0];
+                const existing = AppState.data.history[dateKey] || {};
+
+                AppState.recordHistory(dateKey, {
+                    ...existing,
+                    focus: session.focus,
+                    rpe: rpe,
+                    completed: true
+                });
+
+                Utils.toast('Workout Complete!', 'success');
+                AppState.data.currentWorkout = null;
+                App.router.navigate('dashboard');
+            },
+
+            showExerciseInfo: (idx) => {
+                const ex = AppState.data.currentWorkout.exercises[idx];
+                const modal = document.getElementById('modal-area');
+
+                modal.innerHTML = `
+                    <div class="modal" onclick="event.stopPropagation()">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px;">
+                            <div>
+                                <h2 style="font-size:1.5rem; margin-bottom:5px;">${ex.name}</h2>
+                                <span style="background:#F3F4F6; padding:4px 12px; border-radius:12px; font-size:0.8rem; font-weight:600; color:var(--text-muted);">${ex.muscle} • ${ex.type}</span>
+                            </div>
+                            <button onclick="Handlers.closeModal()" style="background:none; border:none; cursor:pointer; padding:5px;">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                            </button>
+                        </div>
+                        
+                        <p style="color:var(--text-muted); line-height:1.6; margin-bottom:25px;">${ex.description || "No description available."}</p>
+                        
+                        <h4 style="margin-bottom:15px; font-size:1rem;">Instructions</h4>
+                        <div>
+                            ${ex.steps ? ex.steps.map((step, i) => `
+                            <div class="step-item">
+                                <div class="step-number">${i + 1}</div>
+                                <p style="font-size:0.95rem; color:var(--text-main);">${step}</p>
+                            </div>
+                            `).join('') : '<p>No instructions available.</p>'}
+                        </div>
+
+                        <button class="btn" onclick="Handlers.closeModal()" style="margin-top:20px;">Got it</button>
+                    </div>
+                `;
+
+                // Active State
+                modal.classList.add('active');
+            },
+
+            closeModal: (e) => {
+                const modal = document.getElementById('modal-area');
+                modal.classList.remove('active');
+                // Wait for animation to clear content? Not strictly necessary but cleaner
+                setTimeout(() => {
+                    if (!modal.classList.contains('active')) modal.innerHTML = '';
+                }, 300);
+            }
+        };
+
+        // Inject Leaderboard View
+        Views.leaderboard = () => {
+            return `
+             <div class="fade-in" style="padding-bottom:100px;">
+                <h1>Leaderboard</h1>
+                
+                <div style="display:flex; margin-top:20px; margin-bottom:20px; background:#F3F4F6; padding:4px; border-radius:12px;">
+                    <button id="tab-global" onclick="Handlers.switchLeaderboardTab('global')" style="flex:1; padding:10px; border:none; background:white; border-radius:10px; font-weight:600; box-shadow:0 2px 5px rgba(0,0,0,0.05); transition:all 0.2s ease;">Global</button>
+                    <button id="tab-friends" onclick="Handlers.switchLeaderboardTab('friends')" style="flex:1; padding:10px; border:none; background:transparent; color:var(--text-muted); border-radius:10px; font-weight:600; transition:all 0.2s ease;">Friends</button>
+                </div>
+
+                <div id="leaderboard-list">
+                    <div style="text-align:center; padding:40px; color:var(--text-muted);">Loading...</div>
+                </div>
+                
+                <!-- Add Friend Section (Hidden by default, shown in Friends tab or separate) -->
+                <div id="add-friend-section" style="margin-top:30px; display:none;">
+                    <h3>Add Friend</h3>
+                    <div class="card" style="margin-top:10px;">
+                        <form onsubmit="event.preventDefault(); Handlers.addFriend();" style="display:flex; gap:10px;">
+                            <input type="text" id="friend-username" placeholder="Enter username" style="flex:1;">
+                            <button type="submit" class="btn" style="width:auto; padding:0 20px;">Add</button>
+                        </form>
+                        <button onclick="Handlers.inviteFriend()" class="btn-outline" style="width:100%; margin-top:10px; border-radius:16px;">
+                            Share Invite Link 🔗
+                        </button>
+                    </div>
+                </div>
+             </div>
+             `;
+        };
+
+        // --- BOOTSTRAP ---
+        window.app = App; // Expose for debugging
+        App.init();
+
+    </script>
+</body>
+
+</html>

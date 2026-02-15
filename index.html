@@ -458,6 +458,8 @@
     <div id="toast-area" class="toast-container"></div>
     <div id="modal-area" class="modal-overlay" onclick="Handlers.closeModal(event)"></div>
 
+
+
     <div id="nav" class="nav-dock hidden">
         <div class="nav-item" onclick="app.router.navigate('dashboard', this)">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
@@ -527,14 +529,30 @@
                     this.session = session;
 
                     supabaseClient.auth.onAuthStateChange((_event, session) => {
+                        const oldSession = this.session;
                         this.session = session;
-                        if (session) {
+                        if (session && !oldSession) {
                             this.sync('pull'); // Initial pull on login
                         }
                     });
 
                     // Offline/Online Listeners
-                    window.addEventListener('online', () => this.sync('push'));
+                    window.addEventListener('online', () => {
+                        Utils.toast('Back Online - Syncing...', 'success');
+                        this.sync('push').then(() => {
+                            if (App.router.current === 'dashboard') {
+                                App.router.navigate('dashboard');
+                            }
+                        });
+                    });
+                    window.addEventListener('offline', () => {
+                        Utils.toast('Working Offline', 'default');
+                    });
+
+                    // Startup Sync if online and dirty
+                    if (navigator.onLine && this.meta.dirty) {
+                        this.sync('push');
+                    }
                 }
             },
 
@@ -552,22 +570,28 @@
             save() {
                 this.meta.dirty = true;
                 this.meta.updated_at = new Date().toISOString();
-                localStorage.setItem('fitflow_v2', JSON.stringify({
-                    data: this.data,
-                    meta: this.meta
-                }));
+                this.persist();
 
                 // Debounce sync
                 if (this.syncTimer) clearTimeout(this.syncTimer);
                 this.syncTimer = setTimeout(() => this.sync('push'), 2000);
             },
 
+            persist() {
+                localStorage.setItem('fitflow_v2', JSON.stringify({
+                    data: this.data,
+                    meta: this.meta
+                }));
+            },
+
             async sync(mode = 'push') {
-                if (!supabaseClient || !this.session || !navigator.onLine) return;
+                if (!supabaseClient || !this.session) return;
 
                 const userId = this.session.user.id;
 
-                if (mode === 'push' && this.meta.dirty) {
+                if (mode === 'push') {
+                    if (!navigator.onLine || !this.meta.dirty) return;
+
                     // Upload
                     const { error } = await supabaseClient
                         .from('user_data')
@@ -580,7 +604,7 @@
                     if (!error) {
                         this.meta.dirty = false;
                         this.meta.lastSync = new Date().toISOString();
-                        localStorage.setItem('fitflow_v2', JSON.stringify({ data: this.data, meta: this.meta }));
+                        this.persist();
                         console.log("Synced to Cloud");
 
                         // Sync Public Profile (Fire and Forget)
@@ -601,6 +625,8 @@
                     }
                 }
                 else if (mode === 'pull') {
+                    if (!navigator.onLine) return;
+
                     // Download
                     const { data, error } = await supabaseClient
                         .from('user_data')
@@ -609,19 +635,16 @@
                         .single();
 
                     if (data && data.content) {
-                        // Conflict Resolution: Last Write Wins (Simple)
-                        // Or if local is cleaner/newer?
-                        // For now, if pulling (usually on login), we trust cloud unless local is very fresh?
-                        // Let's trust cloud on login.
+                        // Conflict Resolution: Cloud Wins on Login
                         this.data = data.content;
                         this.meta.dirty = false;
                         this.meta.lastSync = new Date().toISOString();
-                        this.save(); // Just to persist to local storage, careful not to loop
-                        localStorage.setItem('fitflow_v2', JSON.stringify({ data: this.data, meta: this.meta }));
+                        this.persist();
                         console.log("Synced from Cloud");
+
                         // Refresh View
                         const currentRoute = App.router.current || 'dashboard';
-                        if (currentRoute !== 'login' && currentRoute !== 'signup') {
+                        if (currentRoute !== 'login' && currentRoute !== 'signup' && currentRoute !== 'onboarding') {
                             App.router.navigate(currentRoute);
                         }
                     }
@@ -867,6 +890,14 @@
                 description: "A bodyweight press that targets the shoulders similarly to an overhead press.",
                 steps: ["Start in pushup position, then hike hips way up.", "Lower head towards floor.", "Push back away from floor.", "Keep modification for difficulty."]
             },
+            {
+                name: "Front Raises",
+                muscle: "Shoulders",
+                type: "isolation",
+                equipment: ["Full Gym", "Dumbbells Only"],
+                description: "Isolates the anterior deltoids for shoulder definition.",
+                steps: ["Hold weights at front of thighs.", "Lift arms straight forward to shoulder height.", "Lower with control.", "Don't use momentum."]
+            },
             // Arms (Split)
             {
                 name: "Barbell Curls",
@@ -875,6 +906,22 @@
                 equipment: ["Full Gym", "Dumbbells Only"],
                 description: "Classic mass builder for the biceps.",
                 steps: ["Hold bar with underhand grip.", "Curl weight up towards shoulders.", "Squeeze biceps at top.", "Lower fully."]
+            },
+            {
+                name: "Hammer Curls",
+                muscle: "Biceps",
+                type: "isolation",
+                equipment: ["Full Gym", "Dumbbells Only"],
+                description: "Targets the brachialis and brachioradialis for forearm and biceps thickness.",
+                steps: ["Hold dumbbells with neutral (palms in) grip.", "Curl weights while maintaining grip.", "Squeeze at the top.", "Lower with control."]
+            },
+            {
+                name: "Preacher Curls",
+                muscle: "Biceps",
+                type: "isolation",
+                equipment: ["Full Gym", "Dumbbells Only"],
+                description: "Isolates the biceps by preventing momentum and targeting the short head.",
+                steps: ["Sit at preacher bench, arms over pad.", "Grip weight with underhand grip.", "Curl towards chin.", "Lower slowly for a full stretch."]
             },
             {
                 name: "Tricep Dips",
@@ -891,6 +938,14 @@
                 equipment: ["Full Gym", "Dumbbells Only"],
                 description: "Isolates the long head of the triceps for arm size.",
                 steps: ["Lie on bench, weight straight up.", "Bend elbows to lower weight to forehead.", "Extend arms back to start.", "Keep elbows tucked in."]
+            },
+            {
+                name: "Tricep Pushdowns",
+                muscle: "Triceps",
+                type: "isolation",
+                equipment: ["Full Gym"],
+                description: "Excellent isolation for all three heads of the triceps using a cable machine.",
+                steps: ["Grip cable bar or rope.", "Keep elbows tucked at sides.", "Push down until arms are fully extended.", "Focus on the tricep squeeze at the bottom."]
             },
             // Abs
             {
@@ -934,6 +989,14 @@
                 description: "Builds grip strength, traps, and core stability.",
                 steps: ["Hold heavy weights in each hand.", "Stand tall with chest up.", "Walk for distance or time.", "Don't let weights swing."]
             },
+            {
+                name: "Reverse Curls",
+                muscle: "Forearms",
+                type: "isolation",
+                equipment: ["Full Gym", "Dumbbells Only"],
+                description: "Targets the brachioradialis and wrist extensors.",
+                steps: ["Grip bar or dumbbells with overhand grip.", "Curl weights up towards shoulders.", "Keep wrists straight.", "Lower with control."]
+            },
             // Neck
             {
                 name: "Neck Curls",
@@ -942,6 +1005,22 @@
                 equipment: ["Bodyweight Only", "Full Gym"],
                 description: "Strengthens the front of the neck.",
                 steps: ["Lie on back on bench, head hanging off.", "Place light plate or hand on forehead.", "Bring chin to chest.", "Lower controlled."]
+            },
+            {
+                name: "Neck Extensions",
+                muscle: "Neck",
+                type: "isolation",
+                equipment: ["Bodyweight Only", "Full Gym"],
+                description: "Strengthens the rear neck muscles (trapezius and splenius capitis).",
+                steps: ["Lie face down on bench, head hanging off.", "Place light plate or hand on back of head.", "Lift head towards ceiling.", "Lower slowly with control."]
+            },
+            {
+                name: "Side Neck Curls",
+                muscle: "Neck",
+                type: "isolation",
+                equipment: ["Bodyweight Only", "Full Gym"],
+                description: "Targets the sternocleidomastoid on the sides of the neck.",
+                steps: ["Lie on your side on a bench.", "Rest head on arm or over the edge.", "Lift head sideways towards shoulder.", "Repeat for both sides."]
             },
             // Cardio
             {
@@ -959,6 +1038,14 @@
                 equipment: ["Bodyweight Only"],
                 description: "Full body metabolic conditioning.",
                 steps: ["Drop to pushup position.", "Jump feet in.", "Jump up explosively.", "Repeat."]
+            },
+            {
+                name: "Jumping Jacks",
+                muscle: "Cardio",
+                type: "compound",
+                equipment: ["Bodyweight Only"],
+                description: "Full body cardio and coordination.",
+                steps: ["Start with feet together, arms at sides.", "Jump feet out while swinging arms overhead.", "Jump back to start.", "Maintain a steady rhythm."]
             }
         ];
 
@@ -996,10 +1083,10 @@
 
                 // Map compound strings to arrays
                 const muscleMap = {
-                    "Chest & Triceps": ["Chest", "Triceps", "Abs"], // Added Abs as finisher
-                    "Back & Biceps": ["Back", "Biceps", "Forearms"], // Added Forearms
-                    "Legs & Shoulders": ["Legs", "Shoulders", "Neck"], // Added Neck
-                    "Cardio & Abs": ["Cardio", "Abs"],
+                    "Chest & Triceps": ["Chest", "Triceps", "Abs", "Forearms"],
+                    "Back & Biceps": ["Back", "Biceps", "Forearms"],
+                    "Legs & Shoulders": ["Legs", "Shoulders", "Neck", "Forearms"],
+                    "Cardio & Abs": ["Cardio", "Abs", "Forearms"],
                     "Rest": []
                 };
 
@@ -1028,8 +1115,23 @@
 
                             // Volume Logic based on Experience
                             let count = 2; // Default Intermediate
-                            if (userConfig.experience === "Beginner") count = 1;
-                            if (userConfig.experience === "Advanced") count = 3;
+                            let targetReps = "8-12";
+                            let targetRPE = "8";
+                            let restTime = 60;
+                            let setArray = [1, 2, 3];
+
+                            if (userConfig.experience === "Beginner") {
+                                count = 1;
+                                targetReps = "12-15";
+                                targetRPE = "6-7";
+                                restTime = 90;
+                                setArray = [1, 2];
+                            } else if (userConfig.experience === "Advanced") {
+                                count = 3;
+                                targetRPE = "9-10";
+                                restTime = 45;
+                                setArray = [1, 2, 3, 4];
+                            }
 
                             // Adjust for smaller muscles (finishers)
                             if (["Abs", "Forearms", "Neck", "Cardio"].includes(muscle) && muscleGroups.length > 2) {
@@ -1037,7 +1139,13 @@
                             }
 
                             // Select distinct
-                            const selected = available.slice(0, count);
+                            const selected = available.slice(0, count).map(ex => ({
+                                ...ex,
+                                targetReps: (userConfig.experience === "Advanced" && ex.type === "compound") ? "5-8" : targetReps,
+                                targetRPE: targetRPE,
+                                restTime: restTime,
+                                sets: setArray
+                            }));
                             dayObj.exercises.push(...selected);
                         });
                     }
@@ -1052,7 +1160,7 @@
                 const calculated = (weight || 0) * 35; // 35ml per kg
                 const minimum = 3000; // 3 Liters minimum
                 return Math.max(minimum, calculated); // Returns the LARGER of the two, enforcing the minimum
-            }
+            },
         };
 
         // --- ROUTER & APP CORE ---
@@ -1251,7 +1359,6 @@
                                 <input type="number" id="ob-height" placeholder="e.g. 180" required>
                             </div>
                         </div>
-                        
                         <div style="margin-top: 40px;">
                             <button type="submit" class="btn">
                                 Start Journey
@@ -1274,15 +1381,46 @@
                 const waterGoal = Generators.getWaterGoal(AppState.data.user.weight);
                 const waterPct = Math.min(100, Math.round((currentWater / waterGoal) * 100));
 
+                // Sync Status Logic
+                const isOnline = navigator.onLine;
+                const isDirty = AppState.meta.dirty;
+                let syncColor = "#9CA3AF"; // Default Offline/Clean
+                let syncTitle = "Offline - Clean";
+
+                if (isOnline) {
+                    if (isDirty) {
+                        syncColor = "#F59E0B"; // Online - Pending
+                        syncTitle = "Online - Sync Pending";
+                    } else {
+                        syncColor = "#10B981"; // Online - Synced
+                        syncTitle = "Online - Synced";
+                    }
+                } else {
+                    if (isDirty) {
+                        syncColor = "#EF4444"; // Offline - Dirty
+                        syncTitle = "Offline - Local Changes Pending";
+                    }
+                }
+
                 return `
                 <div class="fade-in">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-                        <div>
-                            <p style="font-size: 0.9rem; color: var(--text-muted); font-weight: 500;">${new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
-                            <h2>Hi, ${AppState.data.user.name}</h2>
-                        </div>
-                        <div style="width: 40px; height: 40px; background: #e5e7eb; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700;">
-                            ${AppState.data.user.name.charAt(0)}
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div style="width: 40px; height: 40px; background: #e5e7eb; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700;">
+                                ${AppState.data.user.name.charAt(0)}
+                            </div>
+                            <div>
+                                <p style="font-size: 0.9rem; color: var(--text-muted); font-weight: 500;">${new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
+                                <h2 style="display: flex; align-items: center; gap: 8px;">
+                                    Hi, ${AppState.data.user.name}
+                                    <span title="${syncTitle}" style="color: ${syncColor}; display: flex; align-items: center;">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M17.5 19c2.5 0 4.5-2 4.5-4.5 0-2.3-1.7-4.2-3.9-4.5C17.6 6.6 14.5 4 11 4 7.9 4 5.3 6.1 4.2 9 1.9 9.6 0 11.6 0 14c0 2.2 1.8 4 4 4h1.5"></path>
+                                            ${isDirty && isOnline ? '<path d="M22 11l-4 4 4 4"></path>' : ''}
+                                        </svg>
+                                    </span>
+                                </h2>
+                            </div>
                         </div>
                     </div>
 
@@ -1421,7 +1559,7 @@
                         }
                     } else {
                         // Defaults for new exercises
-                        defaultReps = "10"; // Placeholder
+                        defaultReps = ex.targetReps ? ex.targetReps.split('-')[0] : "10";
                     }
 
                     const isBodyweight = ex.equipment.includes("Bodyweight Only") && !ex.equipment.includes("Full Gym") && !ex.equipment.includes("Dumbbells Only");
@@ -1434,8 +1572,9 @@
                                     ${ex.name} 
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.5"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
                                 </h3>
-                                <div style="display: flex; gap: 8px; align-items: center;">
+                                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
                                     <span style="font-size: 0.8rem; color: var(--text-muted); padding: 2px 8px; background: #f3f4f6; border-radius: 6px;">${ex.muscle}</span>
+                                    <span style="font-size: 0.75rem; color: var(--primary); background: #EFF6FF; padding: 2px 8px; border-radius: 6px; font-weight:600;">Target: ${ex.targetReps} reps @ RPE ${ex.targetRPE}</span>
                                     ${badge ? `<span style="font-size: 0.75rem; color: var(--success-text); background: var(--success); padding: 2px 8px; border-radius: 6px;">${badge}</span>` : ''}
                                 </div>
                             </div>
@@ -1445,10 +1584,9 @@
                         </div>
 
                         <div style="display: flex; gap: 10px; flex-direction: column;">
-                            ${(AppState.data.user.experience === 'Beginner' ? [1, 2] :
-                            AppState.data.user.experience === 'Advanced' ? [1, 2, 3, 4] : [1, 2, 3]).map(setNum => {
-                                const isCompleted = (ex.completedSets || []).includes(setNum);
-                                return `
+                            ${(ex.sets || [1, 2, 3]).map(setNum => {
+                        const isCompleted = (ex.completedSets || []).includes(setNum);
+                        return `
                                 <div class="set-row ${isCompleted ? 'completed' : ''}" style="display: flex; align-items: center; gap: 10px; border-bottom: none; padding: 5px 0;">
                                     <div style="width: 24px; font-weight: 600; color: var(--text-muted); font-size: 0.9rem;">${setNum}</div>
                                     <input type="number" class="ex-input weight-${idx}" placeholder="kg" style="${isBodyweight ? 'display:none' : ''}" value="${defaultWeight}">
@@ -1483,7 +1621,7 @@
                                     </div>
                                 </div>
                                 `;
-                            }).join('')}
+                    }).join('')}
                         </div>
                     </div>
                     `;
@@ -1512,7 +1650,15 @@
                 // AppState.data.plan is 0=Mon.
                 const todayIdx = (new Date().getDay() + 6) % 7;
 
-                let html = `<div class="fade-in" style="padding-bottom: 100px;"><h1>Weekly Plan</h1><div style="margin-top:20px; display:flex; flex-direction:column; gap:10px;">`;
+                let html = `
+                <div class="fade-in" style="padding-bottom: 100px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <h1>Weekly Plan</h1>
+                        <button id="regen-btn" onclick="Handlers.regeneratePlan()" class="btn-outline" style="font-size:0.8rem; padding:6px 12px; border-radius:8px;">
+                            Regenerate
+                        </button>
+                    </div>
+                    <div style="margin-top:20px; display:flex; flex-direction:column; gap:10px;">`;
 
                 AppState.data.plan.forEach((day, i) => {
                     const isToday = i === todayIdx;
@@ -1648,7 +1794,7 @@
                     Utils.toast(error.message, 'default');
                 } else {
                     Utils.toast('Logged In!', 'success');
-                    AppState.session = data.session; // Should trigger init pull via listener but manual nav is safer
+                    AppState.session = data.session;
                     App.router.navigate('dashboard');
                 }
             },
@@ -1673,7 +1819,6 @@
                     Utils.toast(error.message, 'default');
                 } else {
                     Utils.toast('Account Created!', 'success');
-                    // Pre-fill user data
                     AppState.updateUser({ name, weight, height });
                     App.router.navigate('onboarding');
                 }
@@ -1682,8 +1827,6 @@
             handleLogout: async () => {
                 await supabaseClient.auth.signOut();
                 AppState.session = null;
-                // Optional: Clear local data? Or keep it? keeping it is "offline first"
-                // But maybe we want to protect privacy. Let's redirect to login.
                 App.router.navigate('login');
             },
 
@@ -1701,6 +1844,14 @@
                 });
 
                 App.router.navigate('dashboard'); // Re-render
+            },
+
+            regeneratePlan: () => {
+                const newPlan = Generators.generateWeeklyPlan(AppState.data.user);
+                AppState.data.plan = newPlan;
+                AppState.save();
+                Utils.toast('Plan Regenerated', 'success');
+                App.router.navigate('plan');
             },
 
             setStreakMode: (mode) => {
@@ -1907,11 +2058,9 @@
                         onboarded: true
                     });
 
-                    // Generate initial plan now that we have equipment
-                    const newPlan = Generators.generateWeeklyPlan(AppState.data.user);
-                    AppState.data.plan = newPlan;
+                    // Generate initial plan
+                    AppState.data.plan = Generators.generateWeeklyPlan(AppState.data.user);
                     AppState.save();
-
                     Utils.toast(`Welcome, ${name}!`);
                     App.router.navigate('dashboard');
                 }
@@ -1920,22 +2069,66 @@
             startWorkout: (dayIndex) => {
                 const plan = AppState.data.plan[dayIndex];
                 if (plan && !plan.isRest) {
-                    // Only initialize if not already in session OR if jumping to a different day
-                    if (!AppState.data.currentWorkout || AppState.data.currentWorkout.index !== dayIndex) {
-                        AppState.data.currentWorkout = JSON.parse(JSON.stringify(plan));
-                        AppState.data.currentWorkout.index = dayIndex;
-                        // Initialize completion tracking
-                        AppState.data.currentWorkout.exercises.forEach(ex => {
-                            ex.completedSets = [];
-                        });
-                        AppState.save();
-                    }
-                    App.router.navigate('workout');
+                    const modal = document.getElementById('modal-area');
+                    modal.innerHTML = `
+                        <div class="modal" onclick="event.stopPropagation()">
+                            <h2 style="margin-bottom:10px;">Customize Workout</h2>
+                            <p style="color:var(--text-muted); margin-bottom:20px;">How much time do you have today?</p>
+                            
+                            <div style="margin-bottom:25px;">
+                                <label style="display:block; font-size:0.8rem; font-weight:700; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Time Available (Minutes)</label>
+                                <input type="number" id="workout-duration" value="45" style="width:100%; font-size:1.2rem; font-weight:700; text-align:center;">
+                            </div>
+
+                            <button class="btn" onclick="Handlers.confirmDuration(${dayIndex})">Maximize Results & Start</button>
+                            <button class="btn-outline" onclick="Handlers.closeModal()" style="margin-top:10px; border:none; color:var(--text-muted);">Cancel</button>
+                        </div>
+                    `;
+                    modal.classList.add('active');
                 }
+            },
+
+            confirmDuration: (dayIndex) => {
+                const mins = parseInt(document.getElementById('workout-duration').value) || 45;
+                const plan = AppState.data.plan[dayIndex];
+
+                // Deep copy the plan
+                let session = JSON.parse(JSON.stringify(plan));
+                session.index = dayIndex;
+
+                // Maximize Results: Prioritize Compounds, then Isolation
+                // 1. Sort: Compounds first, then Isolation
+                session.exercises.sort((a, b) => {
+                    if (a.type === 'compound' && b.type !== 'compound') return -1;
+                    if (a.type !== 'compound' && b.type === 'compound') return 1;
+                    return 0;
+                });
+
+                // 2. Trim based on time (Heuristic: ~8 mins per exercise including transitions)
+                const maxEx = Math.max(2, Math.floor(mins / 8));
+                session.exercises = session.exercises.slice(0, maxEx);
+
+                // 3. Adjust sets if extremely short on time (< 15 mins)
+                if (mins < 15) {
+                    session.exercises.forEach(ex => {
+                        ex.sets = ex.sets.slice(0, 2); // Cap at 2 sets
+                    });
+                }
+
+                // Initialize completion tracking
+                session.exercises.forEach(ex => {
+                    ex.completedSets = [];
+                });
+
+                AppState.data.currentWorkout = session;
+                AppState.save();
+                Handlers.closeModal();
+                App.router.navigate('workout');
             },
 
             swapExercise: (exIdx) => {
                 const session = AppState.data.currentWorkout;
+                if (!session) return;
                 const old = session.exercises[exIdx];
 
                 // Find substitute
@@ -1946,7 +2139,24 @@
                 );
 
                 if (available.length > 0) {
-                    const random = available[Math.floor(Math.random() * available.length)];
+                    let random = available[Math.floor(Math.random() * available.length)];
+
+                    // Assign Intensity Metadata
+                    const exp = AppState.data.user.experience;
+                    let targetReps = "8-12";
+                    let targetRPE = "8";
+                    let restTime = 60;
+                    let sets = [1, 2, 3];
+
+                    if (exp === "Beginner") {
+                        targetReps = "12-15"; targetRPE = "6-7"; restTime = 90; sets = [1, 2];
+                    } else if (exp === "Advanced") {
+                        targetRPE = "9-10"; restTime = 45; sets = [1, 2, 3, 4];
+                        if (random.type === "compound") targetReps = "5-8";
+                    }
+
+                    random = { ...random, targetReps, targetRPE, restTime, sets, completedSets: [] };
+
                     session.exercises[exIdx] = random;
                     Utils.toast(`Swapped to ${random.name}`);
                     App.router.navigate('workout'); // Re-render
@@ -1973,8 +2183,7 @@
                         ex.completedSets.push(setNum);
                     }
 
-                    const duration = type === 'compound' ? 90 : 60;
-                    // ... rest of the timer logic
+                    const duration = ex.restTime || (type === 'compound' ? 90 : 60);
                     const existing = document.querySelector('.timer-toast');
                     if (existing) existing.remove();
 
@@ -2009,10 +2218,9 @@
 
             finishWorkout: () => {
                 const session = AppState.data.currentWorkout;
+                if (!session) return;
 
                 // Save inputs to history
-                const inputs = document.querySelectorAll('.ex-input');
-
                 session.exercises.forEach((ex, i) => {
                     const wInput = document.querySelector(`.weight-${i}`);
                     const rInput = document.querySelector(`.reps-${i}`);
@@ -2044,7 +2252,9 @@
             },
 
             showExerciseInfo: (idx) => {
-                const ex = AppState.data.currentWorkout.exercises[idx];
+                const session = AppState.data.currentWorkout;
+                if (!session) return;
+                const ex = session.exercises[idx];
                 const modal = document.getElementById('modal-area');
 
                 modal.innerHTML = `
@@ -2079,7 +2289,7 @@
                 modal.classList.add('active');
             },
 
-            closeModal: (e) => {
+            closeModal: () => {
                 const modal = document.getElementById('modal-area');
                 modal.classList.remove('active');
                 // Wait for animation to clear content? Not strictly necessary but cleaner
@@ -2129,3 +2339,4 @@
 </body>
 
 </html>
+```
